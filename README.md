@@ -1,4 +1,4 @@
-# Simple logger example for MMSP 2025 mini project 4
+# Simple logger example for MMSP 2025 mini project 4 (https://hackmd.io/@ntpu-ce-mmsp/mmsp-2025-mini-project-4)
 
 這個資料夾提供一個簡單的 `logger.h` / `logger.c`，以及兩個示範程式，說明如何在
 Huffman encoder / decoder 裡使用標準化的 log 格式。
