@@ -1,0 +1,37 @@
+# 編譯產物
+*.o
+encoder_example
+decoder_example
+encoder_example.exe
+decoder_example.exe
+
+# 測試產生的檔案
+input.txt
+codebook.txt
+encoded.bin
+output.txt
+
+# Log 檔案
+*.log
+*.err
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# 編輯器暫存檔
+*.swp
+*.swo
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
