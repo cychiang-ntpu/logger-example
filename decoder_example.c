@@ -1,32 +1,144 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "logger.h"
+/*
+ * ============================================================================
+ * 標頭檔引入說明
+ * ============================================================================
+ */
+
+#include <stdio.h>   // 標準輸入輸出函式庫
+                     // - fprintf(): 格式化輸出到 stderr，用於顯示使用方式
+                     // - FILE*: 檔案指標型別，用於檔案操作
+                     // - 實際實作 Huffman decoder 時還需要：
+                     //   fopen(), fclose(), fread(), fwrite(), fputc() 等
+                     //   用於讀取 encoded file 和 codebook
+
+#include <stdlib.h>  // 標準函式庫
+                     // - 本範例程式雖未直接使用，但實際實作時會需要：
+                     //   malloc(), calloc(), free(): 動態記憶體配置
+                     //   exit(), EXIT_SUCCESS, EXIT_FAILURE: 程式結束
+                     //   atoi(), strtol(): 字串轉數字（解析 codebook 時可能用到）
+
+#include "logger.h"  // 自訂的 logger 函式庫（使用雙引號表示本地標頭檔）
+                     // - log_info(): 記錄一般資訊（輸出到 stdout）
+                     // - log_error(): 記錄錯誤訊息（輸出到 stderr）
+                     // - log_warn(): 記錄警告訊息（本範例未使用）
+                     // 提供標準化的 log 格式：時間戳記 [等級] 元件: 訊息
 
 /*
- * 範例 decoder main：
- * - 只示範 logger 的用法與 log 格式
- * - Huffman 的實作請同學自行完成
+ * ============================================================================
+ * Huffman Decoder 範例程式
+ * ============================================================================
+ * 
+ * 【程式目的】
+ * 本程式示範如何在 Huffman decoder 中使用標準化的 logger 函式庫。
+ * 這只是一個範例框架，實際的 Huffman 解碼演算法需要同學自行實作。
+ * 
+ * 【參數說明】
+ * argv[1] - enc_fn : 編碼檔案路徑（由 encoder 產生的二進位檔案）
+ * argv[2] - cb_fn  : codebook 檔案路徑（符號與編碼的對應表）
+ * argv[3] - out_fn : 解碼輸出檔案路徑（還原後的原始文字檔）
+ * 
+ * 【Log 輸出規範】
+ * - 使用 log_info() 記錄正常流程（輸出到 stdout）
+ * - 使用 log_error() 記錄錯誤訊息（輸出到 stderr）
+ * - 每行 log 包含：時間戳記、等級、元件名稱、訊息內容
+ * 
+ * 【執行範例】
+ * ./decoder_example encoded.bin codebook.txt output.txt > decoder.log 2> decoder.err
+ * 
+ * 【驗證方式】
+ * 解碼後的檔案應該與原始輸入檔案完全相同：
+ * diff input.txt output.txt  # 應該沒有任何差異
+ * 
+ * ============================================================================
  */
+
 int main(int argc, char **argv) {
+    /* ========================================================================
+     * 步驟 1: 參數驗證
+     * ======================================================================== */
+    
+    // 檢查命令列參數數量是否正確
+    // 預期 4 個參數：程式名稱 + 3 個檔案路徑
     if (argc != 4) {
+        // 記錄錯誤：參數數量不正確
         log_error("decoder", "invalid_arguments argc=%d", argc);
+        
+        // 顯示正確的使用方式給使用者
         fprintf(stderr, "Usage: %s enc_fn cb_fn out_fn\n", argv[0]);
-        return 1;
+        return 1;  // 返回錯誤代碼
     }
 
-    const char *enc_fn = argv[1];
-    const char *cb_fn  = argv[2];
-    const char *out_fn = argv[3];
+    // 取得並儲存三個檔案路徑參數
+    const char *enc_fn = argv[1];  // 編碼檔案（二進位資料）
+    const char *cb_fn  = argv[2];  // codebook 檔案（符號編碼表）
+    const char *out_fn = argv[3];  // 輸出檔案（還原的文字）  // 輸出檔案（還原的文字）
 
+    /* ========================================================================
+     * 步驟 2: 記錄程式開始執行
+     * ======================================================================== */
+    
+    // 記錄 decoder 開始執行，並顯示所有輸入/輸出檔案路徑
+    // 這個 log 會輸出到 stdout，格式：時間 [INFO] decoder: start ...
     log_info("decoder", "start input_encoded=%s input_codebook=%s output_file=%s",
              enc_fn, cb_fn, out_fn);
 
-    /* TODO: 在這裡加入 Huffman decoder 的實作
-       以下只是示範用的假資料，請同學改成自己計算出的結果 */
+    /* ========================================================================
+     * 步驟 3: Huffman 解碼主要邏輯（TODO: 需要實作）
+     * ========================================================================
+     * 
+     * 【實作步驟建議】
+     * 1. 讀取 codebook 檔案，建立「編碼 -> 符號」的對應表
+     * 2. 讀取編碼檔案（二進位格式）
+     * 3. 逐位元讀取，使用 Huffman tree 或查表法找到對應的符號
+     * 4. 將解碼後的符號寫入輸出檔案
+     * 5. 統計解碼的符號總數
+     * 6. 驗證解碼是否成功（例如：檔案結尾標記、符號數量檢查）
+     * 
+     * 【錯誤處理】
+     * - 檔案無法開啟：使用 log_error() 記錄並返回錯誤
+     * - codebook 格式錯誤：記錄錯誤訊息
+     * - 遇到無效的編碼序列：記錄警告或錯誤
+     * - 解碼結果驗證失敗：status_ok 設為 0
+     * 
+     * 【注意事項】
+     * - 以下是示範用的假資料，請改成實際的解碼結果
+     * - 解碼後的檔案應該與原始檔案完全相同
+     * ======================================================================== */
 
+    // ===== 假資料：請替換成實際計算結果 =====
+    
+    // num_decoded_symbols: 成功解碼的符號總數
+    // 這個數字應該與 encoder 的 num_symbols 相同
     int num_decoded_symbols = 48;
+    
+    // status_ok: 解碼狀態旗標
+    // 1 表示成功，0 表示有錯誤發生
+    // 錯誤情況包括：檔案讀取失敗、codebook 錯誤、解碼失敗等
     int status_ok = 1;
 
+    /* ========================================================================
+     * 步驟 4: 輸出 Metrics 統計資訊
+     * ========================================================================
+     * 
+     * 這個 log 會輸出一行完整的解碼摘要，包含重要資訊。
+     * 使用 component="metrics" 來標識這是統計資料。
+     * 
+     * 【輸出格式】
+     * - 所有 key=value 格式，方便後續解析
+     * - 包含所有輸入/輸出檔案路徑，方便追蹤
+     * - status 顯示解碼是否成功
+     * 
+     * 【重要資訊說明】
+     * - input_encoded: 輸入的編碼檔案
+     * - input_codebook: 使用的 codebook 檔案
+     * - output_file: 輸出的解碼檔案
+     * - num_decoded_symbols: 成功解碼的符號數量
+     * - status: 解碼狀態（ok 或 error）
+     * 
+     * 【驗證建議】
+     * 可以比對 encoder 和 decoder 的 num_symbols，兩者應該相同。
+     * ======================================================================== */
+    
     log_info("metrics",
              "summary input_encoded=%s input_codebook=%s output_file=%s "
              "num_decoded_symbols=%d status=%s",
@@ -34,9 +146,17 @@ int main(int argc, char **argv) {
              cb_fn,
              out_fn,
              num_decoded_symbols,
-             status_ok ? "ok" : "error");
+             status_ok ? "ok" : "error");  // 三元運算子：成功顯示 "ok"，失敗顯示 "error"
 
+    /* ========================================================================
+     * 步驟 5: 記錄程式結束
+     * ======================================================================== */
+    
+    // 記錄 decoder 結束執行，並顯示最終狀態
+    // 如果 status_ok = 1，顯示 "ok"；如果 status_ok = 0，顯示 "error"
     log_info("decoder", "finish status=%s", status_ok ? "ok" : "error");
 
+    // 根據 status_ok 決定返回值
+    // 成功返回 0，失敗返回 1（Unix/Linux 慣例）
     return status_ok ? 0 : 1;
 }
